@@ -176,6 +176,12 @@ class ProjectController extends Controller
         $this->authorize('delete project');
         try {
             $project = Project::findOrFail($id);
+            if($project->plots()->exists()) {
+                return redirect()->back()->with('error', "Project can't be deleted because it has associated plots");
+            }
+            if (isset($project->main_image) && File::exists(public_path($project->main_image))) {
+                File::delete(public_path($project->main_image));
+            }
             $project->delete();
             return redirect()->back()->with('success', 'Project Deleted Successfully');
         } catch (\Throwable $th) {

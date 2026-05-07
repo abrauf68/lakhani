@@ -36,6 +36,30 @@
                 </a>
             </li>
         @endcan
+        @can(['view plot'])
+            <li class="menu-item {{ request()->routeIs('dashboard.plots.*') ? 'active' : '' }}">
+                <a href="{{ route('dashboard.plots.index') }}" class="menu-link">
+                    <i class="menu-icon tf-icons ti ti-package"></i>
+                    <div>{{__('Plots')}}</div>
+                </a>
+            </li>
+        @endcan
+        @can(['view customer'])
+            <li class="menu-item {{ request()->routeIs('dashboard.customers.*') ? 'active' : '' }}">
+                <a href="{{ route('dashboard.customers.index') }}" class="menu-link">
+                    <i class="menu-icon tf-icons ti ti-package"></i>
+                    <div>{{__('Customers')}}</div>
+                </a>
+            </li>
+        @endcan
+        @can(['view payment'])
+            <li class="menu-item {{ request()->routeIs('dashboard.payments.*') ? 'active' : '' }}">
+                <a href="{{ route('dashboard.payments.index') }}" class="menu-link">
+                    <i class="menu-icon tf-icons ti ti-package"></i>
+                    <div>{{__('Payments')}}</div>
+                </a>
+            </li>
+        @endcan
         @canany(['view user', 'view archived user'])
             <li class="menu-item {{ request()->routeIs('dashboard.user.*') || request()->routeIs('dashboard.archived-user.*') ? 'open' : '' }}">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">

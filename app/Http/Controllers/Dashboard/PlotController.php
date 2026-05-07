@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProjectPlot;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -19,7 +20,7 @@ class PlotController extends Controller
     {
         $this->authorize('view plot');
         try {
-            $plots = ProjectPlot::all();
+            $plots = ProjectPlot::with('project')->get();
             return view('dashboard.plots.index', compact('plots'));
         } catch (\Throwable $th) {
             Log::error('Plots Index Failed', ['error' => $th->getMessage()]);
@@ -35,7 +36,8 @@ class PlotController extends Controller
     {
         $this->authorize('create plot');
         try {
-            return view('dashboard.plots.create');
+            $projects = Project::where('is_active', 'active')->get();
+            return view('dashboard.plots.create', compact('projects'));
         } catch (\Throwable $th) {
             Log::error('Plots Create Failed', ['error' => $th->getMessage()]);
             return redirect()->back()->with('error', "Something went wrong! Please try again later");
@@ -48,6 +50,7 @@ class PlotController extends Controller
      */
     public function store(Request $request)
     {
+        // dd($request->all());
         $this->authorize('create plot');
         $validator = Validator::make($request->all(), [
             'project_id' => 'required|exists:projects,id',
@@ -57,12 +60,14 @@ class PlotController extends Controller
             'category' => 'required|in:residential,commercial,industrial',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'extra' => 'nullable|string',
+            'extra' => 'nullable|array',
+            'extra.*' => 'string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max_size',
         ]);
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput($request->all())->with('error', 'Validation Error!');
+            Log::error('Plot Validation Failed', ['errors' => $validator->errors()]);
+            return redirect()->back()->withErrors($validator)->withInput($request->all())->with('error', $validator->errors()->first());
         }
 
         try {
@@ -123,7 +128,8 @@ class PlotController extends Controller
         $this->authorize('update plot');
         try {
             $plot = ProjectPlot::findOrFail($id);
-            return view('dashboard.plots.edit', compact('plot'));
+            $projects = Project::where('is_active', 'active')->get();
+            return view('dashboard.plots.edit', compact('plot', 'projects'));
         } catch (\Throwable $th) {
             Log::error('Plot Edit Failed', ['error' => $th->getMessage()]);
             return redirect()->back()->with('error', "Something went wrong! Please try again later");
@@ -146,7 +152,8 @@ class PlotController extends Controller
             'category' => 'required|in:residential,commercial,industrial',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'extra' => 'nullable|string',
+            'extra' => 'nullable|array',
+            'extra.*' => 'string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max_size',
         ]);
         if ($validator->fails()) {
@@ -192,6 +199,9 @@ class PlotController extends Controller
         $this->authorize('delete plot');
         try {
             $plot = ProjectPlot::findOrFail($id);
+            if($plot->customerPlotFiles()->exists()) {
+                return redirect()->back()->with('error', 'Cannot delete plot with associated customers. Please delete the customers first.');
+            }
             if (isset($plot->image) && File::exists(public_path($plot->image))) {
                 File::delete(public_path($plot->image));
             }

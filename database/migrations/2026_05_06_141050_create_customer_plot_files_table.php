@@ -23,6 +23,7 @@ return new class extends Migration
             $table->decimal('remaining_amount', 15, 2)->default(0);
             $table->date('booking_date')->nullable();
             $table->enum('status', ['booked', 'cancelled'])->default('booked');
+            $table->enum('payment_status', ['unpaid', 'paid', 'partial'])->default('unpaid');
             $table->timestamps();
         });
     }

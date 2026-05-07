@@ -156,7 +156,7 @@ class ProfileController extends Controller
             DB::commit();
             return redirect()->back()->with('success', 'Profile Updated Successfully');
         } catch (\Throwable $th) {
-            throw $th;
+            // throw $th;
             DB::rollBack();
             Log::error('Profile Updated Failed', ['error' => $th->getMessage()]);
             return redirect()->back()->with('error', "Something went wrong! Please try again later");
@@ -188,7 +188,7 @@ class ProfileController extends Controller
         } catch (\Throwable $th) {
             Log::error('Account Deactivation Failed', ['error' => $th->getMessage()]);
             return redirect()->back()->with('error', "Something went wrong! Please try again later");
-            throw $th;
+            // throw $th;
         }
     }
 
@@ -222,7 +222,7 @@ class ProfileController extends Controller
         } catch (\Throwable $th) {
             Log::error('Password Update Failed', ['error' => $th->getMessage()]);
             return redirect()->back()->with('error', "Something went wrong! Please try again later");
-            throw $th;
+            // throw $th;
         }
     }
 }

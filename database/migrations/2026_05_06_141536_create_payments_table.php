@@ -20,6 +20,9 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->date('payment_date');
             $table->enum('payment_method', ['cash', 'cheque', 'bank_transfer'])->default('cash');
+            $table->string('bank_name')->nullable();
+            $table->string('bank_branch')->nullable();
+            $table->string('cheque_no')->nullable();
             $table->text('remarks')->nullable();
             $table->timestamps();
         });

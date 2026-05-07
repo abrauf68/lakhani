@@ -5,8 +5,10 @@ use App\Http\Controllers\Auth\GithubController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Dashboard\CustomerController;
 use App\Http\Controllers\Dashboard\HomeController;
 use App\Http\Controllers\Dashboard\NotificationController;
+use App\Http\Controllers\Dashboard\PaymentController;
 use App\Http\Controllers\Dashboard\PlotController;
 use App\Http\Controllers\Dashboard\ProfileController;
 use App\Http\Controllers\Dashboard\ProjectController;
@@ -144,6 +146,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::resource('plots', PlotController::class);
             Route::get('plots/status/{id}', [PlotController::class, 'updateStatus'])->name('plots.status.update');
+
+            Route::resource('customers', CustomerController::class);
+
+            Route::resource('payments', PaymentController::class);
 
         });
     });
