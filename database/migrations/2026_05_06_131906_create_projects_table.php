@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('slug')->unique();
             $table->longText('description')->nullable();
             $table->string('main_image')->nullable();
+            $table->string('water_mark_image')->nullable();
             $table->string('country')->nullable();
             $table->text('address')->nullable();
             $table->enum('is_active', ['active', 'inactive'])->default('active');

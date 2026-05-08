@@ -122,4 +122,75 @@ class Helper
             </script>
         HTML;
     }
+
+    public static function numberToWords($num)
+    {
+        // 🔹 clean input (fix 0.00 issue)
+        $num = (float) $num;
+
+        if ($num == 0) {
+            return "Zero Only";
+        }
+
+        return ucfirst(trim(self::convert((int)$num))) . " Only";
+    }
+
+    private static function convert($num)
+    {
+        $ones = [
+            0 => "",
+            1 => "one",
+            2 => "two",
+            3 => "three",
+            4 => "four",
+            5 => "five",
+            6 => "six",
+            7 => "seven",
+            8 => "eight",
+            9 => "nine",
+            10 => "ten",
+            11 => "eleven",
+            12 => "twelve",
+            13 => "thirteen",
+            14 => "fourteen",
+            15 => "fifteen",
+            16 => "sixteen",
+            17 => "seventeen",
+            18 => "eighteen",
+            19 => "nineteen"
+        ];
+
+        $tens = [
+            2 => "twenty",
+            3 => "thirty",
+            4 => "forty",
+            5 => "fifty",
+            6 => "sixty",
+            7 => "seventy",
+            8 => "eighty",
+            9 => "ninety"
+        ];
+
+        if ($num < 20) {
+            return $ones[$num];
+        }
+
+        if ($num < 100) {
+            return $tens[intval($num / 10)] . " " . $ones[$num % 10];
+        }
+
+        if ($num < 1000) {
+            return $ones[intval($num / 100)] . " hundred " . self::convert($num % 100);
+        }
+
+        if ($num < 100000) {
+            return self::convert(intval($num / 1000)) . " thousand " . self::convert($num % 1000);
+        }
+
+        if ($num < 10000000) {
+            return self::convert(intval($num / 100000)) . " lakh " . self::convert($num % 100000);
+        }
+
+        return self::convert(intval($num / 10000000)) . " crore " . self::convert($num % 10000000);
+    }
 }

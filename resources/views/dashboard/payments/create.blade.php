@@ -20,7 +20,7 @@
 
                     <div class="row p-5">
                         <h3>{{ __('Add New Payment') }}</h3>
-                        
+
                         <div class="mb-4 col-md-12">
                             <label for="customer_plot_file_id" class="form-label">{{ __('Customer Plot File') }}</label><span
                                 class="text-danger">*</span>
@@ -140,7 +140,7 @@
                                 </div>
 
                                 <div class="mb-4 col-md-4">
-                                    <label for="bank_branch" class="form-label">{{ __('Bank Branch') }}</label><span class="text-danger">*</span>
+                                    <label for="bank_branch" class="form-label">{{ __('Bank Branch (Optional)') }}</label>
                                     <input class="form-control @error('bank_branch') is-invalid @enderror" type="text" id="bank_branch"
                                         name="bank_branch" placeholder="{{ __('Enter bank branch') }}"
                                         value="{{ old('bank_branch') }}" />
@@ -190,9 +190,9 @@
     <script>
         $(document).ready(function() {
             console.log('Document ready - Script loaded');
-            
+
             // Handle billing selection
-            $('#billing_id').on('change', function() {
+            $('#customer_plot_file_id').on('change', function() {
                 let remaining = $(this).find(':selected').data('remaining');
                 console.log('Remaining amount:', remaining);
                 $('#remaining_amount').val(remaining);
@@ -211,7 +211,7 @@
                 // Remove required attributes
                 $('#cheque_no').removeAttr('required');
                 $('#bank_name').removeAttr('required');
-                $('#bank_branch').removeAttr('required');
+                // $('#bank_branch').removeAttr('required');
                 $('#cheque_no_bank').removeAttr('required');
 
                 // Show relevant fields based on selection
@@ -223,7 +223,7 @@
                     console.log('Showing bank transfer fields');
                     $('#bank_container').show();
                     $('#bank_name').attr('required', true);
-                    $('#bank_branch').attr('required', true);
+                    // $('#bank_branch').attr('required', true);
                 } else {
                     console.log('No extra fields for:', paymentMethod);
                 }

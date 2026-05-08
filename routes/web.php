@@ -40,9 +40,9 @@ use Illuminate\Support\Facades\Session;
 
 Route::get('/lang/{lang}', function ($lang) {
     // dd($lang);
-    if(! in_array($lang, ['en','fr','ar','de'])){
+    if (! in_array($lang, ['en', 'fr', 'ar', 'de'])) {
         abort(404);
-    }else{
+    } else {
         session(['locale' => $lang]);
         App::setLocale($lang);
         Log::info("Locale set to: " . $lang);
@@ -150,15 +150,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('customers', CustomerController::class);
 
             Route::resource('payments', PaymentController::class);
-
         });
     });
-
 });
 
 // Frontend Pages Routes
 Route::name('frontend.')->group(function () {
 
+    Route::get('ledger/bookingledger/{id}', [PaymentController::class, 'verifyPayment'])->name('payment.verify');
 });
 
 
@@ -189,4 +188,3 @@ Route::middleware(['auth'])->group(function () {
         return "Optimization cache cleared!";
     })->name('clear.optimize');
 });
-

@@ -26,7 +26,7 @@ class Payment extends Model
 
     public function scopeWithRelations($query)
     {
-        return $query->with('customerPlotFile.customer:id,name,cnic', 
+        return $query->with('customerPlotFile.customer:id,name,cnic',
                            'customerPlotFile.projectPlot:id,block,plot_no');
     }
 

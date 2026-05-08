@@ -1,531 +1,654 @@
 @extends('layouts.master')
 
-@section('title', __('Customer Details'))
+@section('title', __('Payment Receipt'))
 
 @section('css')
-<link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-    /* Professional Corporate Design */
-    body {
-        background: #f5f7fa;
-    }
-    
-    /* Back Button */
-    .back-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        color: #475569;
-        font-size: 14px;
-        font-weight: 500;
-        transition: all 0.2s;
-        margin-bottom: 20px;
-    }
-    
-    .back-btn:hover {
-        background: #f8fafc;
-        border-color: #cbd5e1;
-        text-decoration: none;
-        color: #1e293b;
-    }
-    
-    /* Cards */
-    .card-custom {
-        background: white;
-        border-radius: 8px;
-        border: 1px solid #e2e8f0;
-        overflow: hidden;
-        margin-bottom: 24px;
-    }
-    
-    .card-header-custom {
-        padding: 16px 24px;
-        background: white;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .card-header-custom h5 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: #1e293b;
-    }
-    
-    .card-body-custom {
-        padding: 24px;
-    }
-    
-    /* Info Grid */
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-    
-    .info-item {
-        padding: 16px 20px;
-        background: white;
-        border-right: 1px solid #e2e8f0;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .info-item:nth-child(4n) {
-        border-right: none;
-    }
-    
-    .info-item:nth-last-child(-n+4) {
-        border-bottom: none;
-    }
-    
-    .info-label {
-        font-size: 11px;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #64748b;
-        margin-bottom: 6px;
-    }
-    
-    .info-value {
-        font-size: 14px;
-        font-weight: 500;
-        color: #1e293b;
-    }
-    
-    /* Status Badges */
-    .badge-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        font-size: 12px;
-        font-weight: 500;
-        border-radius: 4px;
-    }
-    
-    .badge-active, .badge-booked {
-        background: #e6f4ea;
-        color: #1e7e34;
-    }
-    
-    .badge-inactive, .badge-cancelled {
-        background: #fef2f0;
-        color: #dc3545;
-    }
-    
-    /* Plot Table */
-    .plot-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    
-    .plot-table th {
-        text-align: left;
-        padding: 12px 16px;
-        background: #f8fafc;
-        font-size: 12px;
-        font-weight: 600;
-        color: #475569;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .plot-table td {
-        padding: 16px;
-        font-size: 13px;
-        color: #334155;
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: top;
-    }
-    
-    .plot-row {
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-    
-    .plot-row:hover {
-        background: #fafbfc;
-    }
-    
-    /* Details Panel */
-    .details-panel {
-        background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
-        padding: 20px 24px;
-    }
-    
-    .details-panel.hide {
-        display: none;
-    }
-    
-    .detail-section {
-        margin-bottom: 24px;
-    }
-    
-    .detail-section:last-child {
-        margin-bottom: 0;
-    }
-    
-    .detail-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: #1e293b;
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .detail-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-    }
-    
-    .detail-label {
-        font-size: 11px;
-        color: #64748b;
-        margin-bottom: 4px;
-    }
-    
-    .detail-value {
-        font-size: 14px;
-        font-weight: 500;
-        color: #1e293b;
-    }
-    
-    /* Financial Cards */
-    .financial-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-    
-    .financial-box {
-        background: white;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        padding: 12px 16px;
-    }
-    
-    .financial-box .label {
-        font-size: 11px;
-        color: #64748b;
-        margin-bottom: 6px;
-    }
-    
-    .financial-box .amount {
-        font-size: 18px;
-        font-weight: 600;
-        color: #1e293b;
-    }
-    
-    /* Payment Table */
-    .payment-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 13px;
-    }
-    
-    .payment-table th {
-        text-align: left;
-        padding: 10px 12px;
-        background: white;
-        font-weight: 600;
-        color: #475569;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .payment-table td {
-        padding: 10px 12px;
-        border-bottom: 1px solid #f1f5f9;
-        color: #475569;
-    }
-    
-    .method-badge {
-        display: inline-block;
-        padding: 3px 8px;
-        font-size: 11px;
-        font-weight: 500;
-        border-radius: 3px;
-        background: #f1f5f9;
-        color: #475569;
-    }
-    
-    /* Expand Icon */
-    .expand-icon {
-        transition: transform 0.2s;
-        color: #94a3b8;
-    }
-    
-    .rotate {
-        transform: rotate(90deg);
-    }
-    
-    /* Responsive */
-    @media (max-width: 768px) {
-        .info-grid {
-            grid-template-columns: repeat(2, 1fr);
+    <style>
+        .receipt-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 30px 0;
         }
-        .info-item:nth-child(4n) {
-            border-right: 1px solid #e2e8f0;
+
+        .receipt-actions {
+            display: flex;
+            justify-content: flex-end;
+            max-width: 820px;
+            margin: 0 auto 12px;
+            gap: 10px;
         }
-        .info-item:nth-child(2n) {
-            border-right: none;
+
+        .receipt-card {
+            background: #fff;
+            width: 820px;
+            border: 1px solid #bbb;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.13);
+            font-family: Arial, sans-serif;
         }
-        .financial-grid {
-            grid-template-columns: repeat(2, 1fr);
+
+        /* ── HEADER ── */
+        .receipt-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px 12px;
+            border-bottom: 2.5px solid #000;
         }
-        .detail-grid {
-            grid-template-columns: 1fr;
+
+        .logo-box {
+            width: 74px;
+            height: 74px;
+            border: 2px solid #1a3c6e;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
         }
-    }
-</style>
+
+        .logo-star {
+            font-size: 30px;
+            color: #1a3c6e;
+            line-height: 1;
+        }
+
+        .logo-text {
+            font-size: 8px;
+            font-weight: bold;
+            color: #1a3c6e;
+            text-align: center;
+            line-height: 1.3;
+            margin-top: 3px;
+        }
+
+        .center-section {
+            text-align: center;
+            flex: 1;
+            padding: 0 16px;
+        }
+
+        .project-of {
+            font-size: 10px;
+            color: #555;
+            margin-bottom: 2px;
+        }
+
+        .urdu-title {
+            font-size: 34px;
+            color: #1a3c6e;
+            font-family: 'Times New Roman', serif;
+            letter-spacing: 2px;
+            line-height: 1.1;
+        }
+
+        .eng-title {
+            font-size: 19px;
+            font-weight: bold;
+            color: #1a3c6e;
+            letter-spacing: 3px;
+            margin-top: 2px;
+        }
+
+        .scheme-subtitle {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .original-box {
+            text-align: center;
+        }
+
+        .original-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            border: 1.5px solid #333;
+            padding: 2px 10px;
+            display: inline-block;
+            letter-spacing: 1px;
+        }
+
+        .receipt-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            border: 2px solid #333;
+            padding: 5px 20px;
+            display: inline-block;
+            margin-top: 8px;
+            letter-spacing: 3px;
+        }
+
+        /* ── INFO ROWS ── */
+        .info-row {
+            display: flex;
+            align-items: center;
+            padding: 7px 18px;
+            border-bottom: 1px solid #ddd;
+            gap: 18px;
+        }
+
+        .info-field {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .info-field .lbl {
+            font-size: 12px;
+            font-weight: bold;
+            color: #222;
+            white-space: nowrap;
+        }
+
+        .info-field .val {
+            font-size: 12px;
+            font-weight: bold;
+            color: #111;
+            border-bottom: 1px solid #444;
+            flex: 1;
+            padding-bottom: 1px;
+            min-width: 60px;
+        }
+
+        .name-row {
+            display: flex;
+            align-items: center;
+            padding: 7px 18px;
+            border-bottom: 1px solid #ddd;
+            gap: 10px;
+        }
+
+        .name-row .lbl {
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .name-row .val {
+            font-size: 13px;
+            font-weight: bold;
+            flex: 1;
+            border-bottom: 1px solid #444;
+            padding-bottom: 1px;
+        }
+
+        .name-row .contact-lbl {
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .name-row .contact-val {
+            font-size: 12px;
+            font-weight: bold;
+            border-bottom: 1px solid #444;
+            min-width: 120px;
+            padding-bottom: 1px;
+        }
+
+        .father-row {
+            display: flex;
+            align-items: center;
+            padding: 7px 18px;
+            border-bottom: 1px solid #ddd;
+            gap: 10px;
+        }
+
+        .father-row .lbl {
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            min-width: 110px;
+        }
+
+        .father-row .val {
+            font-size: 13px;
+            font-weight: bold;
+            flex: 1;
+            border-bottom: 1px solid #444;
+            padding-bottom: 1px;
+        }
+
+        .father-row .meta-group {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .meta-item {
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .meta-item .meta-lbl {
+            font-size: 10px;
+            color: #666;
+            line-height: 1.2;
+        }
+
+        .meta-item .meta-val {
+            font-size: 12px;
+            font-weight: bold;
+            border-bottom: 1px solid #444;
+            padding-bottom: 1px;
+        }
+
+        /* ── PLOT ROW ── */
+        .plot-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 18px;
+            border-bottom: 2.5px solid #000;
+            gap: 20px;
+            border: 1px solid #000;
+            margin: 5px;
+        }
+
+        .plot-field {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .plot-field .lbl {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .plot-field .val {
+            font-size: 12px;
+            font-weight: bold;
+            border-bottom: 1px solid #444;
+            min-width: 40px;
+            padding-bottom: 1px;
+        }
+
+        /* ── PAYMENT TABLE ── */
+        .pay-table-header {
+            display: flex;
+            background: #1a3c6e;
+            color: #fff;
+        }
+
+        .pay-table-header .th {
+            padding: 8px 18px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .pay-table-header .th-amount {
+            margin-left: auto;
+            padding: 8px 18px;
+            font-size: 12px;
+            font-weight: bold;
+            min-width: 130px;
+            text-align: right;
+        }
+
+        .pay-table-body .tr {
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+
+        .pay-table-body .td {
+            padding: 9px 18px;
+            font-size: 12px;
+            flex: 1;
+        }
+
+        .pay-table-body .td-amount {
+            padding: 9px 18px;
+            font-size: 12px;
+            font-weight: bold;
+            min-width: 130px;
+            text-align: right;
+        }
+
+        /* ── PAYMENT MODE SECTION ── */
+        .mode-section {
+            display: flex;
+            border-top: 2px solid #000;
+        }
+
+        .mode-left {
+            flex: 1;
+            padding: 12px 18px;
+            border-right: 1px solid #ccc;
+        }
+
+        .mode-title {
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #333;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+        }
+
+        .mode-line {
+            font-size: 11.5px;
+            color: #222;
+            line-height: 2;
+        }
+
+        .mode-right {
+            width: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .total-box {
+            border: 2px solid #333;
+            padding: 10px 20px;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .total-label {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .total-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1a3c6e;
+        }
+
+        /* ── WORDS ROW ── */
+        .words-row {
+            border-top: 1px solid #ccc;
+            padding: 7px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+            background: #fafafa;
+        }
+
+        .words-row .words-lbl {
+            font-weight: bold;
+        }
+
+        .words-row .words-val {
+            font-style: italic;
+            font-weight: bold;
+        }
+
+        .words-row .printed-by {
+            font-size: 10px;
+            color: #777;
+        }
+
+        @media print {
+            .receipt-actions {
+                display: none;
+            }
+
+            body {
+                background: #fff !important;
+            }
+
+            .receipt-card {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+        }
+
+        /* ===== QR CODE SECTION ===== */
+        .qr-section {
+            margin: 8px 0 5px;
+            text-align: center;
+        }
+
+        .qr-code {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 3px;
+            border: 1px solid #000;
+            padding: 2px;
+            display: block;
+        }
+
+        .qr-label {
+            font-size: 9px;
+            font-weight: bold;
+            margin: 2px 0;
+        }
+
+        .qr-url {
+            font-size: 8px;
+            color: #000;
+            word-break: break-all;
+            margin: 1px 0;
+        }
+
+        .payment-mode{
+            display: flex;
+            justify-content: space-between
+        }
+    </style>
 @endsection
 
 @section('breadcrumb-items')
-    <li class="breadcrumb-item"><a href="{{ route('dashboard.customers.index') }}">{{ __('Customers') }}</a></li>
-    <li class="breadcrumb-item active">{{ __('Customer Details') }}</li>
+    <li class="breadcrumb-item"><a href="{{ route('dashboard.payments.index') }}">{{ __('Payments') }}</a></li>
+    <li class="breadcrumb-item active">{{ __('Payment Details') }}</li>
 @endsection
 
 @section('content')
     <div class="container-xxl flex-grow-1 container-p-y">
-        <!-- Back Button -->
-        <a href="{{ route('dashboard.customers.index') }}" class="back-btn">
-            <i class="fas fa-arrow-left" style="font-size: 12px;"></i>
-            Back to Customers
-        </a>
 
-        <!-- Customer Info Card -->
-        <div class="card-custom">
-            <div class="card-header-custom">
-                <h5><i class="fas fa-user" style="margin-right: 8px; color: #64748b;"></i> Customer Information</h5>
-            </div>
-            <div class="card-body-custom">
-                <div class="info-grid">
-                    <div class="info-item">
-                        <div class="info-label">Full Name</div>
-                        <div class="info-value">{{ $customer->name }}</div>
+        <div class="receipt-actions">
+            <a href="{{ route('dashboard.payments.index') }}" class="btn btn-secondary btn-sm">
+                <i class="ti ti-arrow-left me-1"></i>{{ __('Back') }}
+            </a>
+            <button onclick="printReceipt()" class="btn btn-primary btn-sm">
+                <i class="ti ti-printer me-1"></i>{{ __('Print Receipt') }}
+            </button>
+        </div>
+
+        <div class="receipt-wrapper" id="receipt-container">
+            <div class="receipt-card">
+
+                {{-- ── HEADER ── --}}
+                <div class="receipt-header">
+                    <div class="logo-section">
+                        {{-- <div class="logo-box">
+                            <div class="logo-star">★</div>
+                            <div class="logo-text">SHINE STAR<br>Builder &amp; Developer</div>
+                        </div> --}}
+                        <img height="40px" src="{{ asset(\App\Helpers\Helper::getLogoDark()) }}" alt="{{ env('APP_NAME') }}">
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">S/o D/o W/o</div>
-                        <div class="info-value">{{ $customer->father_husband_name }}</div>
+
+                    <div class="center-section">
+                        <div class="project-of">The project of</div>
+                        <div class="urdu-title">گلشن بهولاری</div>
+                        <div class="eng-title">GULSHAN-E-BHOLARI</div>
+                        <div class="scheme-subtitle">Housing Scheme</div>
                     </div>
-                    <div class="info-item">
-                        <div class="info-label">CNIC</div>
-                        <div class="info-value">{{ $customer->cnic ?? '—' }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Status</div>
-                        <div class="info-value">
-                            <span class="badge-status {{ $customer->is_active == 'active' ? 'badge-active' : 'badge-inactive' }}">
-                                <i class="fas {{ $customer->is_active == 'active' ? 'fa-check' : 'fa-times' }}" style="font-size: 10px;"></i>
-                                {{ ucfirst($customer->is_active) }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Email</div>
-                        <div class="info-value">{{ $customer->email ?? '—' }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Phone</div>
-                        <div class="info-value">{{ $customer->phone ?? '—' }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Nominee</div>
-                        <div class="info-value">{{ $customer->nominee ?? '—' }}</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Member Since</div>
-                        <div class="info-value">{{ $customer->created_at ? $customer->created_at->format('d M, Y') : '—' }}</div>
-                    </div>
-                    <div class="info-item" style="grid-column: span 2;">
-                        <div class="info-label">Address</div>
-                        <div class="info-value">{{ $customer->address ?? '—' }}</div>
+
+                    <div class="original-box">
+                        <div class="original-label">ORIGINAL</div><br>
+                        <div class="receipt-label">RECEIPT</div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Plot Files Card -->
-        <div class="card-custom">
-            <div class="card-header-custom">
-                <h5><i class="fas fa-folder" style="margin-right: 8px; color: #64748b;"></i> Plot Files</h5>
-            </div>
-            <div class="card-body-custom" style="padding: 0;">
-                @if($customer->customerPlotFiles && $customer->customerPlotFiles->count() > 0)
-                    <table class="plot-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 40px;"></th>
-                                <th>File No.</th>
-                                <th>Project</th>
-                                <th>Plot No.</th>
-                                <th>Booking Date</th>
-                                <th>Total Cost</th>
-                                <th>Paid</th>
-                                <th>Remaining</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($customer->customerPlotFiles as $plotFile)
-                                @php
-                                    $totalPaid = $plotFile->payments->sum('amount');
-                                @endphp
-                                <tr class="plot-row" data-id="{{ $plotFile->id }}">
-                                    <td><i class="fas fa-chevron-right expand-icon" style="font-size: 12px;"></i></td>
-                                    <td><strong>{{ $plotFile->file_no }}</strong></td>
-                                    <td>{{ $plotFile->projectPlot->project->name ?? '—' }}</td>
-                                    <td>{{ $plotFile->projectPlot->plot_no ?? '—' }}</td>
-                                    <td>{{ $plotFile->booking_date ? date('d-m-Y', strtotime($plotFile->booking_date)) : '—' }}</td>
-                                    <td>Rs. {{ number_format($plotFile->total_cost, 0) }}</td>
-                                    <td>Rs. {{ number_format($totalPaid, 0) }}</td>
-                                    <td>Rs. {{ number_format($plotFile->remaining_amount, 0) }}</td>
-                                    <td>
-                                        <span class="badge-status {{ $plotFile->status == 'booked' ? 'badge-booked' : 'badge-cancelled' }}">
-                                            {{ ucfirst($plotFile->status) }}
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr class="details-row" data-id="{{ $plotFile->id }}" style="display: none;">
-                                    <td colspan="9" style="padding: 0;">
-                                        <div class="details-panel">
-                                            <!-- Financial Summary -->
-                                            <div class="financial-grid">
-                                                <div class="financial-box">
-                                                    <div class="label">Total Cost</div>
-                                                    <div class="amount">Rs. {{ number_format($plotFile->total_cost, 0) }}</div>
-                                                </div>
-                                                <div class="financial-box">
-                                                    <div class="label">Discount</div>
-                                                    <div class="amount">Rs. {{ number_format($plotFile->discount, 0) }}</div>
-                                                </div>
-                                                <div class="financial-box">
-                                                    <div class="label">Net Amount</div>
-                                                    <div class="amount">Rs. {{ number_format($plotFile->total_cost - $plotFile->discount, 0) }}</div>
-                                                </div>
-                                                <div class="financial-box">
-                                                    <div class="label">Remaining</div>
-                                                    <div class="amount">Rs. {{ number_format($plotFile->remaining_amount, 0) }}</div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Plot Details -->
-                                            <div class="detail-section">
-                                                <div class="detail-title">Plot Details</div>
-                                                <div class="detail-grid">
-                                                    <div>
-                                                        <div class="detail-label">Project</div>
-                                                        <div class="detail-value">{{ $plotFile->projectPlot->project->name ?? '—' }}</div>
-                                                    </div>
-                                                    <div>
-                                                        <div class="detail-label">Plot No.</div>
-                                                        <div class="detail-value">{{ $plotFile->projectPlot->plot_no ?? '—' }}</div>
-                                                    </div>
-                                                    <div>
-                                                        <div class="detail-label">Block</div>
-                                                        <div class="detail-value">{{ $plotFile->projectPlot->block ?? '—' }}</div>
-                                                    </div>
-                                                    <div>
-                                                        <div class="detail-label">Size</div>
-                                                        <div class="detail-value">{{ $plotFile->projectPlot->size ?? '—' }}</div>
-                                                    </div>
-                                                    <div>
-                                                        <div class="detail-label">Category</div>
-                                                        <div class="detail-value">{{ ucfirst($plotFile->projectPlot->category ?? '—') }}</div>
-                                                    </div>
-                                                    <div>
-                                                        <div class="detail-label">Booked By</div>
-                                                        <div class="detail-value">{{ $plotFile->booked_by ?? '—' }}</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <!-- Payment History -->
-                                            <div class="detail-section">
-                                                <div class="detail-title">Payment History</div>
-                                                @if($plotFile->payments && $plotFile->payments->count() > 0)
-                                                    <table class="payment-table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Date</th>
-                                                                <th>Type</th>
-                                                                <th>Reference</th>
-                                                                <th>Amount</th>
-                                                                <th>Method</th>
-                                                                <th>Received By</th>
-                                                                <th>Remarks</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach($plotFile->payments as $payment)
-                                                                动态
-                                                                    <td>{{ date('d-m-Y', strtotime($payment->payment_date)) }}</td>
-                                                                    <td>{{ ucfirst($payment->payment_type) }}</td>
-                                                                    <td>{{ $payment->ref_no ?? '—' }}</td>
-                                                                    <td><strong>Rs. {{ number_format($payment->amount, 0) }}</strong></td>
-                                                                    <td><span class="method-badge">{{ str_replace('_', ' ', ucfirst($payment->payment_method)) }}</span></td>
-                                                                    <td>{{ $payment->received_by ?? '—' }}</td>
-                                                                    <td>{{ $payment->remarks ?? '—' }}</td>
-                                                                </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                @else
-                                                    <div style="padding: 20px; text-align: center; color: #94a3b8;">
-                                                        <i class="fas fa-receipt" style="margin-bottom: 8px; display: block;"></i>
-                                                        No payment records found
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @else
-                    <div style="padding: 40px; text-align: center; color: #94a3b8;">
-                        <i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 12px; display: block;"></i>
-                        No plot files found for this customer
+                {{-- ── RECEIPT NO / FILE NO / DATE ── --}}
+                <div class="info-row">
+                    <div class="info-field">
+                        <span class="lbl">Receipt No:</span>
+                        <span class="val">{{ $payment->id }}</span>
                     </div>
-                @endif
-            </div>
-        </div>
+                    <div class="info-field">
+                        <span class="lbl">File No:</span>
+                        <span class="val">{{ $payment->customerPlotFile->file_no ?? 'N/A' }}</span>
+                    </div>
+                    <div class="info-field" style="flex:0.6;">
+                        <span class="lbl">Date:</span>
+                        <span class="val">{{ \Carbon\Carbon::parse($payment->payment_date)->format('d-M-Y') }}</span>
+                    </div>
+                </div>
+
+                {{-- ── CUSTOMER NAME / CONTACT ── --}}
+                <div class="name-row">
+                    <span class="lbl">Mr./Mrs./Ms.:</span>
+                    <span class="val">{{ strtoupper($payment->customerPlotFile->customer->name ?? 'N/A') }}</span>
+                    <span class="contact-lbl">Contact:</span>
+                    <span class="contact-val">{{ $payment->customerPlotFile->customer->phone ?? 'N/A' }}</span>
+                </div>
+
+                {{-- ── FATHER NAME / REC BY / BOOK BY ── --}}
+                <div class="father-row">
+                    <span class="lbl">S/o./D/o./W/o.:</span>
+                    <span
+                        class="val">{{ strtoupper($payment->customerPlotFile->customer->father_husband_name ?? 'N/A') }}</span>
+                    <div class="meta-group">
+                        <div class="meta-item">
+                            <div class="meta-lbl">Rec By</div>
+                            <div class="meta-val">{{ $payment->received_by ?? 'N/A' }}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-lbl">Book By</div>
+                            <div class="meta-val">{{ $payment->customerPlotFile->booked_by ?? 'N/A' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ── PLOT INFO ── --}}
+                <div class="plot-row">
+                    <div class="plot-field">
+                        <span class="lbl">Block:</span>
+                        <span class="val">{{ $payment->customerPlotFile->projectPlot->block ?? 'N/A' }}</span>
+                    </div>
+                    <div class="plot-field">
+                        <span class="lbl">Plot No:</span>
+                        <span class="val">{{ $payment->customerPlotFile->projectPlot->plot_no ?? 'N/A' }}</span>
+                    </div>
+                    <div class="plot-field">
+                        <span class="lbl">Size:</span>
+                        <span class="val">{{ $payment->customerPlotFile->projectPlot->size ?? 'N/A' }}</span>
+                    </div>
+                    <div class="plot-field">
+                        <span class="lbl">Category:</span>
+                        <span class="val"
+                            style="text-transform:capitalize;">{{ ucfirst($payment->customerPlotFile->projectPlot->category ?? 'N/A') }}</span>
+                    </div>
+                </div>
+
+                {{-- ── PAYMENT TABLE ── --}}
+                <div class="pay-table-header">
+                    <div class="th" style="flex:1;">Payment Description</div>
+                    <div class="th-amount">Amount</div>
+                </div>
+                <div class="pay-table-body">
+                    <div class="tr">
+                        <div class="td" style="flex:1;">{{ ucfirst($payment->payment_type) }}</div>
+                        <div class="td-amount">{{ \App\Helpers\Helper::formatCurrency($payment->amount) }}</div>
+                    </div>
+                </div>
+
+                {{-- ── MODE OF PAYMENT ── --}}
+                <div class="mode-section">
+                    <div class="mode-left">
+                        <div class="mode-title">Mode of Payment</div>
+                        <div class="payment-mode">
+                            <div>
+                                @if ($payment->payment_method === 'cash')
+                                    <div class="mode-line"><strong>Cash</strong></div>
+                                @elseif($payment->payment_method === 'cheque')
+                                    <div class="mode-line"><strong>Cheque</strong></div>
+                                    @if ($payment->bank_name)
+                                        <div class="mode-line"><strong>Bank:</strong> {{ $payment->bank_name }}</div>
+                                    @endif
+                                    @if ($payment->bank_branch)
+                                        <div class="mode-line"><strong>Branch:</strong> {{ $payment->bank_branch }}</div>
+                                    @endif
+                                    @if ($payment->cheque_no)
+                                        <div class="mode-line"><strong>Cheque No:</strong> {{ $payment->cheque_no }}</div>
+                                    @endif
+                                @elseif($payment->payment_method === 'bank_transfer')
+                                    <div class="mode-line"><strong>Bank Transfer</strong> &nbsp;<strong
+                                            style="font-size:15px;">ONLINE</strong></div>
+                                    @if ($payment->bank_name)
+                                        <div class="mode-line"><strong>Bank:</strong> {{ $payment->bank_name }}</div>
+                                    @endif
+                                    @if ($payment->bank_branch)
+                                        <div class="mode-line"><strong>Branch:</strong> {{ $payment->bank_branch }}</div>
+                                    @endif
+                                    <div class="mode-line"><strong>Date:</strong>
+                                        {{ \Carbon\Carbon::parse($payment->payment_date)->format('d-m-Y') }}</div>
+                                    @if ($payment->ref_no)
+                                        <div class="mode-line"><strong>Reference No:</strong> {{ $payment->ref_no }}</div>
+                                    @endif
+                                @endif
+                                @if ($payment->remarks)
+                                    <div class="mode-line" style="margin-top:4px;"><strong>Remarks:</strong>
+                                        {{ $payment->remarks }}</div>
+                                @endif
+                            </div>
+                            <div>
+                                <div class="qr-section">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data={{ urlencode(route('frontend.payment.verify', $payment->id ?? '00000')) }}&margin=0&ecc=H"
+                                        alt="Verify Bill" class="qr-code">
+                                    <div class="qr-label">SCAN TO VERIFY</div>
+                                    {{-- <div class="qr-url blade-placeholder">
+                                        {{ route('frontend.payment.verify', $payment->id ?? '00000') }}</div> --}}
+                                    {{-- <div class="qr-label" style="font-weight:normal">Authenticity Check</div> --}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mode-right">
+                        <div class="total-box">
+                            <div class="total-label">Total:</div>
+                            <div class="total-value">{{ \App\Helpers\Helper::formatCurrency($payment->amount) }}</div>
+                        </div>
+                        <div class="total-box">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ── AMOUNT IN WORDS ── --}}
+                <div class="words-row">
+                    <span class="words-lbl">Amount in Words:</span>
+                    <span class="words-val">
+                        {{-- Pass $amountInWords from controller or use a helper --}}
+                        {{ \App\Helpers\Helper::numberToWords($payment->amount ?? 0) }}
+                    </span>
+                    <span class="printed-by">
+                        Printed By/Date: {{ auth()->user()->name ?? 'System' }} / {{ now()->format('Y/m-d H:i:s') }}
+                    </span>
+                </div>
+
+            </div>{{-- end .receipt-card --}}
+        </div>{{-- end .receipt-wrapper --}}
+
     </div>
 @endsection
 
 @section('script')
-<script>
-    $(document).ready(function() {
-        // Toggle details on row click
-        $('.plot-row').on('click', function() {
-            var id = $(this).data('id');
-            var detailsRow = $('.details-row[data-id="' + id + '"]');
-            var icon = $(this).find('.expand-icon');
-            
-            if (detailsRow.is(':visible')) {
-                detailsRow.hide();
-                icon.removeClass('rotate');
-            } else {
-                // Hide all other open details
-                $('.details-row').hide();
-                $('.expand-icon').removeClass('rotate');
-                
-                // Show this one
-                detailsRow.show();
-                icon.addClass('rotate');
-            }
-        });
-    });
+    <script>
+    function printReceipt() {
+
+        let printContents = document.getElementById('receipt-container').innerHTML;
+
+        let originalContents = document.body.innerHTML;
+
+        document.body.innerHTML = printContents;
+
+        window.print();
+
+        document.body.innerHTML = originalContents;
+
+        location.reload();
+    }
 </script>
 @endsection

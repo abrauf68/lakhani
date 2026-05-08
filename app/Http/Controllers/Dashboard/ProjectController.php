@@ -55,6 +55,7 @@ class ProjectController extends Controller
             'description' => 'nullable|string',
             'address' => 'nullable|string',
             'main_image' => 'nullable|image|mimes:jpeg,png,jpg|max_size',
+            'water_mark_image' => 'nullable|image|mimes:jpeg,png,jpg|max_size',
         ]);
 
         if ($validator->fails()) {
@@ -78,6 +79,16 @@ class ProjectController extends Controller
                 $Image_path = 'uploads/company/projects';
                 $Image->move(public_path($Image_path), $Image_name);
                 $project->main_image = $Image_path . "/" . $Image_name;
+            }
+
+            if ($request->hasFile('water_mark_image')) {
+                $Image = $request->file('water_mark_image');
+                $Image_ext = $Image->getClientOriginalExtension();
+                $Image_name = time() . '_water_mark_image.' . $Image_ext;
+
+                $Image_path = 'uploads/company/projects';
+                $Image->move(public_path($Image_path), $Image_name);
+                $project->water_mark_image = $Image_path . "/" . $Image_name;
             }
 
             $project->save();
@@ -136,6 +147,7 @@ class ProjectController extends Controller
             'description' => 'nullable|string',
             'address' => 'nullable|string',
             'main_image' => 'nullable|image|mimes:jpeg,png,jpg|max_size',
+            'water_mark_image' => 'nullable|image|mimes:jpeg,png,jpg|max_size',
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput($request->all())->with('error', 'Validation Error!');
@@ -158,6 +170,19 @@ class ProjectController extends Controller
                 $Image_path = 'uploads/company/projects';
                 $Image->move(public_path($Image_path), $Image_name);
                 $project->main_image = $Image_path . "/" . $Image_name;
+            }
+
+            if ($request->hasFile('water_mark_image')) {
+                if (isset($project->water_mark_image) && File::exists(public_path($project->water_mark_image))) {
+                    File::delete(public_path($project->water_mark_image));
+                }
+                $Image = $request->file('water_mark_image');
+                $Image_ext = $Image->getClientOriginalExtension();
+                $Image_name = time() . '_water_mark_image.' . $Image_ext;
+
+                $Image_path = 'uploads/company/projects';
+                $Image->move(public_path($Image_path), $Image_name);
+                $project->water_mark_image = $Image_path . "/" . $Image_name;
             }
             $project->save();
             return redirect()->route('dashboard.projects.index')->with('success', 'Project Updated Successfully');

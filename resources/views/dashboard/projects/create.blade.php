@@ -43,10 +43,20 @@
                             @enderror
                         </div>
                         <div class="mb-4 col-md-12">
-                            <label for="main_image" class="form-label">{{ __('Main Image') }}</label>
+                            <label for="main_image" class="form-label">{{ __('Main Logo') }}</label>
                             <input class="form-control @error('main_image') is-invalid @enderror" type="file"
                                 id="main_image" name="main_image" accept="image/*" />
                             @error('main_image')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+                        <div class="mb-4 col-md-12">
+                            <label for="water_mark_image" class="form-label">{{ __('Water Mark Logo') }}</label>
+                            <input class="form-control @error('water_mark_image') is-invalid @enderror" type="file"
+                                id="water_mark_image" name="water_mark_image" accept="image/*" />
+                            @error('water_mark_image')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
                                 </span>

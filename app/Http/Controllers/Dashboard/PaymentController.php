@@ -59,9 +59,9 @@ class PaymentController extends Controller
             'received_by'           => 'required|string|max:255',
             'payment_date'          => 'required|date',
             'payment_method'        => 'required|in:cash,cheque,bank_transfer',
-            'cheque_no'             => 'required_if:payment_method,cheque|string|max:50',
-            'bank_name'             => 'required_if:payment_method,bank_transfer|string|max:50',
-            'bank_branch'           => 'required_if:payment_method,bank_transfer|string|max:50',
+            'cheque_no'             => 'required_if:payment_method,cheque|nullable|string|max:50',
+            'bank_name'             => 'required_if:payment_method,bank_transfer|nullable|string|max:50',
+            'bank_branch'           => 'nullable|string|max:50',
         ]);
 
         if ($validator->fails()) {
@@ -150,7 +150,20 @@ class PaymentController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $this->authorize('view payment');
+        try {
+            $payment = Payment::with('customerPlotFile.customer', 'customerPlotFile.projectPlot')->findOrFail($id);
+
+            return view('dashboard.payments.show', compact(
+                'payment'
+            ));
+        } catch (\Throwable $th) {
+            Log::error("Payment Show Failed:" . $th->getMessage());
+            return redirect()->back()->with(
+                'error',
+                "Something went wrong! Please try again later"
+            );
+        }
     }
 
     /**
@@ -158,7 +171,34 @@ class PaymentController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $this->authorize('update payment');
+
+        try {
+
+            $payment = Payment::findOrFail($id);
+
+            $customerPlotFiles = CustomerPlotFile::forPaymentCreation()->get();
+
+            $customerPlotFile = CustomerPlotFile::find($payment->customer_plot_file_id);
+
+            // Append current customer plot file if not exists
+            if ($customerPlotFile && !$customerPlotFiles->contains('id', $customerPlotFile->id)) {
+                $customerPlotFiles->push($customerPlotFile);
+            }
+
+            return view('dashboard.payments.edit', compact(
+                'customerPlotFiles',
+                'payment'
+            ));
+        } catch (\Throwable $th) {
+
+            Log::error("Payment Edit Failed:" . $th->getMessage());
+
+            return redirect()->back()->with(
+                'error',
+                "Something went wrong! Please try again later"
+            );
+        }
     }
 
     /**
@@ -166,7 +206,154 @@ class PaymentController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $this->authorize('update payment');
+
+        $validator = Validator::make($request->all(), [
+            'customer_plot_file_id' => 'required|exists:customer_plot_files,id',
+            'amount'                => 'required|numeric|min:0.01',
+            'ref_no'                => 'required|string|max:255',
+            'received_by'           => 'required|string|max:255',
+            'payment_date'          => 'required|date',
+            'payment_method'        => 'required|in:cash,cheque,bank_transfer',
+            'cheque_no'             => 'required_if:payment_method,cheque|nullable|string|max:50',
+            'bank_name'             => 'required_if:payment_method,bank_transfer|nullable|string|max:50',
+            'bank_branch'           => 'nullable|string|max:50',
+        ]);
+
+        if ($validator->fails()) {
+            return back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', $validator->errors()->first());
+        }
+
+        try {
+
+            DB::beginTransaction();
+
+            $payment = Payment::lockForUpdate()->findOrFail($id);
+
+            $oldCustomerPlotFile = CustomerPlotFile::lockForUpdate()
+                ->findOrFail($payment->customer_plot_file_id);
+
+            $newCustomerPlotFile = CustomerPlotFile::lockForUpdate()
+                ->findOrFail($request->customer_plot_file_id);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Revert Old Payment Effect
+            |--------------------------------------------------------------------------
+            */
+
+            $oldCustomerPlotFile->paid_amount -= $payment->amount;
+            $oldCustomerPlotFile->remaining_amount += $payment->amount;
+
+            $oldCustomerPlotFile->paid_amount = round($oldCustomerPlotFile->paid_amount, 2);
+            $oldCustomerPlotFile->remaining_amount = round($oldCustomerPlotFile->remaining_amount, 2);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Validate New Amount
+            |--------------------------------------------------------------------------
+            */
+
+            if ($request->amount > $newCustomerPlotFile->remaining_amount) {
+
+                // If same file then allow old payment amount
+                if ($oldCustomerPlotFile->id == $newCustomerPlotFile->id) {
+
+                    $allowedAmount = $newCustomerPlotFile->remaining_amount + $payment->amount;
+
+                    if ($request->amount > $allowedAmount) {
+                        return back()->with(
+                            'error',
+                            'Amount cannot exceed remaining amount.'
+                        );
+                    }
+
+                } else {
+
+                    return back()->with(
+                        'error',
+                        'Amount cannot exceed remaining amount.'
+                    );
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Apply New Payment Effect
+            |--------------------------------------------------------------------------
+            */
+
+            $newCustomerPlotFile->paid_amount += $request->amount;
+            $newCustomerPlotFile->remaining_amount -= $request->amount;
+
+            $newCustomerPlotFile->paid_amount = round($newCustomerPlotFile->paid_amount, 2);
+            $newCustomerPlotFile->remaining_amount = round($newCustomerPlotFile->remaining_amount, 2);
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update Payment Statuses
+            |--------------------------------------------------------------------------
+            */
+
+            foreach ([$oldCustomerPlotFile, $newCustomerPlotFile] as $file) {
+
+                if ($file->remaining_amount <= 0) {
+
+                    $file->remaining_amount = 0;
+                    $file->payment_status = 'paid';
+
+                } elseif ($file->paid_amount > 0) {
+
+                    $file->payment_status = 'partial';
+
+                } else {
+
+                    $file->payment_status = 'unpaid';
+                }
+
+                $file->save();
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update Payment
+            |--------------------------------------------------------------------------
+            */
+
+            $payment->customer_plot_file_id = $request->customer_plot_file_id;
+            $payment->amount = $request->amount;
+            $payment->ref_no = $request->ref_no;
+            $payment->received_by = $request->received_by;
+            $payment->payment_date = $request->payment_date;
+            $payment->payment_method = $request->payment_method;
+            $payment->bank_name = $request->bank_name ?? null;
+            $payment->bank_branch = $request->bank_branch ?? null;
+            $payment->cheque_no = $request->cheque_no ?? null;
+
+            $payment->save();
+
+            DB::commit();
+
+            return redirect()
+                ->route('dashboard.payments.index')
+                ->with('success', 'Payment updated successfully');
+
+        } catch (\Throwable $th) {
+
+            DB::rollBack();
+
+            Log::error('Payment Update Failed', [
+                'error' => $th->getMessage()
+            ]);
+
+            return back()->with(
+                'error',
+                'Something went wrong! Please try again.'
+            );
+        }
     }
 
     /**
@@ -182,45 +369,46 @@ class PaymentController extends Controller
             $payment = Payment::findOrFail($id);
 
             // 🔹 Get related billing
-            $billing = Billing::lockForUpdate()->findOrFail($payment->billing_id);
+            $customerPlotFile = CustomerPlotFile::lockForUpdate()
+                ->findOrFail($payment->customer_plot_file_id);
 
             // 🔹 Reverse payment effect
-            $billing->paid_amount -= $payment->amount;
-            $billing->remaining_amount += $payment->amount;
+            $customerPlotFile->paid_amount -= $payment->amount;
+            $customerPlotFile->remaining_amount += $payment->amount;
 
             // 🔹 Fix negative issues
-            if ($billing->paid_amount < 0) {
-                $billing->paid_amount = 0;
+            if ($customerPlotFile->paid_amount < 0) {
+                $customerPlotFile->paid_amount = 0;
             }
 
-            if ($billing->remaining_amount < 0) {
-                $billing->remaining_amount = 0;
+            if ($customerPlotFile->remaining_amount < 0) {
+                $customerPlotFile->remaining_amount = 0;
             }
 
             // 🔹 Update status
-            if ($billing->remaining_amount == 0 && $billing->paid_amount > 0) {
-                $billing->status = 'paid';
-            } elseif ($billing->paid_amount > 0) {
-                $billing->status = 'partial';
+            if ($customerPlotFile->remaining_amount == 0 && $customerPlotFile->paid_amount > 0) {
+                $customerPlotFile->status = 'paid';
+            } elseif ($customerPlotFile->paid_amount > 0) {
+                $customerPlotFile->status = 'partial';
             } else {
-                $billing->status = 'unpaid';
+                $customerPlotFile->status = 'unpaid';
             }
 
-            $billing->save();
+            $customerPlotFile->save();
 
             // 🔹 Delete payment
             $payment->delete();
 
-            $adminUsers = User::whereHas('roles', function ($query) {
-                $query->whereIn('name', ['admin', 'super-admin']);
-            })->get();
+            // $adminUsers = User::whereHas('roles', function ($query) {
+            //     $query->whereIn('name', ['admin', 'super-admin']);
+            // })->get();
 
-            app('notificationService')->notifyUsers(
-                $adminUsers,
-                'Payment of Rs. ' . $payment->amount . ' deleted for Bill #' . $billing->bill_no . ' by ' . auth()->user()->name,
-                'payments',
-                $payment->id
-            );
+            // app('notificationService')->notifyUsers(
+            //     $adminUsers,
+            //     'Payment of Rs. ' . $payment->amount . ' deleted for File #' . $customerPlotFile->file_no . ' by ' . auth()->user()->name,
+            //     'payments',
+            //     $payment->id
+            // );
 
             DB::commit();
 
