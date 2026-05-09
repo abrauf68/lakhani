@@ -424,4 +424,50 @@ class PaymentController extends Controller
                 ->with('error', "Something went wrong! Please try again later");
         }
     }
+
+
+    public function verifyPayment($id)
+    {
+        try {
+            // Use eager loading to reduce database queries
+            $payment = Payment::with([
+                'customerPlotFile.customer',
+                'customerPlotFile.projectPlot.project'
+            ])->findOrFail($id);
+
+            $customerPlotFile = $payment->customerPlotFile;
+            $customer = $customerPlotFile->customer;
+            $plot = $customerPlotFile->projectPlot;
+            $project = $plot->project;
+
+            // Calculate financials if not stored
+            $totalCost = $customerPlotFile->total_cost;
+            $discount = $customerPlotFile->discount;
+            $paidAmount = $customerPlotFile->paid_amount;
+            $balanceDue = $customerPlotFile->remaining_amount;
+
+            // Get all payments for transaction history
+            $payments = Payment::where('customer_plot_file_id', $customerPlotFile->id)
+                ->orderBy('payment_date', 'desc')
+                ->get();
+
+            return view('frontend.invoice', compact(
+                'payment',
+                'customerPlotFile',
+                'customer',
+                'plot',
+                'project',
+                'totalCost',
+                'discount',
+                'paidAmount',
+                'balanceDue',
+                'payments'
+            ));
+
+        } catch (\Throwable $th) {
+            Log::error("Payment Verification Failed: " . $th->getMessage());
+            return redirect()->back()
+                ->with('error', "Something went wrong! Please try again later");
+        }
+    }
 }
