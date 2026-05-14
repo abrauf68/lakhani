@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\PlotExtra;
 use App\Models\ProjectPlot;
 use App\Models\Project;
 use Illuminate\Http\Request;
@@ -60,9 +61,14 @@ class PlotController extends Controller
             'category' => 'required|in:residential,commercial,industrial',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'extra' => 'nullable|array',
-            'extra.*' => 'string|max:255',
+            // 'extra' => 'nullable|array',
+            // 'extra.*' => 'string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max_size',
+            'has_extras' => 'nullable|boolean',
+            'extra_key' => 'nullable|array',
+            'extra_key.*' => 'nullable|string|max:255',
+            'extra_value' => 'nullable|array',
+            'extra_value.*' => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -80,7 +86,20 @@ class PlotController extends Controller
             $plot->category = $request->category;
             $plot->price = $request->price;
             $plot->description = $request->description;
-            $plot->extra = json_encode($request->extra);
+            if ($request->has('has_extras') && $request->has('extra_key') && !empty($request->extra_key)) {
+                $extras = [];
+                foreach ($request->extra_key as $index => $key) {
+                    if (!empty($key)) {
+                        $extras[] = [
+                            'key' => $key,
+                            'value' => $request->extra_value[$index] ?? null
+                        ];
+                    }
+                }
+                $plot->extra = json_encode($extras);
+            } else {
+                $plot->extra = null;
+            }
 
             if ($request->hasFile('image')) {
                 $Image = $request->file('image');
@@ -93,6 +112,21 @@ class PlotController extends Controller
             }
 
             $plot->save();
+
+            // Save extras to the plot_extras table
+            if ($request->has('has_extras') && $request->has('extra_key') && !empty($request->extra_key)) {
+                PlotExtra::where('project_plot_id', $plot->id)->delete();
+
+                foreach ($request->extra_key as $index => $key) {
+                    if (!empty($key)) {
+                        PlotExtra::create([
+                            'project_plot_id' => $plot->id,
+                            'key' => $key,
+                            'value' => $request->extra_value[$index] ?? null,
+                        ]);
+                    }
+                }
+            }
 
             DB::commit();
             return redirect()->route('dashboard.plots.index')->with('success', 'Plot Created Successfully');
@@ -127,7 +161,7 @@ class PlotController extends Controller
     {
         $this->authorize('update plot');
         try {
-            $plot = ProjectPlot::findOrFail($id);
+            $plot = ProjectPlot::with('extras')->findOrFail($id);
             $projects = Project::where('is_active', 'active')->get();
             return view('dashboard.plots.edit', compact('plot', 'projects'));
         } catch (\Throwable $th) {
@@ -152,9 +186,12 @@ class PlotController extends Controller
             'category' => 'required|in:residential,commercial,industrial',
             'price' => 'required|numeric|min:0',
             'description' => 'nullable|string',
-            'extra' => 'nullable|array',
-            'extra.*' => 'string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max_size',
+            'has_extras' => 'nullable|boolean',
+            'extra_key' => 'nullable|array',
+            'extra_key.*' => 'nullable|string|max:255',
+            'extra_value' => 'nullable|array',
+            'extra_value.*' => 'nullable|string|max:255',
         ]);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput($request->all())->with('error', 'Validation Error!');
@@ -168,7 +205,20 @@ class PlotController extends Controller
             $plot->category = $request->category;
             $plot->price = $request->price;
             $plot->description = $request->description;
-            $plot->extra = json_encode($request->extra);
+            if ($request->has('has_extras') && $request->has('extra_key') && !empty($request->extra_key)) {
+                $extras = [];
+                foreach ($request->extra_key as $index => $key) {
+                    if (!empty($key)) {
+                        $extras[] = [
+                            'key' => $key,
+                            'value' => $request->extra_value[$index] ?? null
+                        ];
+                    }
+                }
+                $plot->extra = json_encode($extras);
+            } else {
+                $plot->extra = null;
+            }
 
             if ($request->hasFile('image')) {
                 if (isset($plot->image) && File::exists(public_path($plot->image))) {
@@ -183,6 +233,22 @@ class PlotController extends Controller
                 $plot->image = $Image_path . "/" . $Image_name;
             }
             $plot->save();
+
+
+            PlotExtra::where('project_plot_id', $plot->id)->delete();
+
+            // Add new extras only if checkbox is checked
+            if ($request->has('has_extras') && $request->has('extra_key') && !empty($request->extra_key)) {
+                foreach ($request->extra_key as $index => $key) {
+                    if (!empty($key)) {
+                        PlotExtra::create([
+                            'project_plot_id' => $plot->id,
+                            'key' => $key,
+                            'value' => $request->extra_value[$index] ?? null,
+                        ]);
+                    }
+                }
+            }
             return redirect()->route('dashboard.plots.index')->with('success', 'Plot Updated Successfully');
         } catch (\Throwable $th) {
             Log::error('Plot Update Failed', ['error' => $th->getMessage()]);

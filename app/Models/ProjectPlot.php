@@ -18,4 +18,9 @@ class ProjectPlot extends Model
     {
         return $this->hasMany(CustomerPlotFile::class, 'project_plot_id');
     }
+
+    public function extras()
+    {
+        return $this->hasMany(PlotExtra::class, 'project_plot_id');
+    }
 }

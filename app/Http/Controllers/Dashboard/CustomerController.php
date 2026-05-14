@@ -37,7 +37,7 @@ class CustomerController extends Controller
     {
         $this->authorize('create customer');
         try {
-            $plots = ProjectPlot::with('project')->where('status', 'unsold')->get();
+            $plots = ProjectPlot::with('project', 'extras')->where('status', 'unsold')->get();
             return view('dashboard.customers.create', compact('plots'));
         } catch (\Throwable $th) {
             Log::error('Customers Create Failed', ['error' => $th->getMessage()]);

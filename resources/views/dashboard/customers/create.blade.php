@@ -19,7 +19,7 @@
 
                     <div class="row p-5">
                         <h3>{{ __('Add New Customer') }}</h3>
-                        
+
                         <!-- Customer Basic Information -->
                         <div class="mb-4 col-md-6">
                             <label for="name" class="form-label">{{ __('Name') }}</label><span class="text-danger">*</span>
@@ -32,7 +32,7 @@
                                 </span>
                             @enderror
                         </div>
-                        
+
                         <div class="mb-4 col-md-6">
                             <label for="father_husband_name" class="form-label">{{ __('S/o.D/o.W/o') }}</label><span class="text-danger">*</span>
                             <input class="form-control @error('father_husband_name') is-invalid @enderror" type="text" id="father_husband_name"
@@ -44,7 +44,7 @@
                                 </span>
                             @enderror
                         </div>
-                        
+
                         <div class="mb-4 col-md-6">
                             <label for="cnic" class="form-label">{{ __('CNIC') }}</label><span class="text-danger">*</span>
                             <input class="form-control @error('cnic') is-invalid @enderror" type="text" id="cnic"
@@ -56,7 +56,7 @@
                                 </span>
                             @enderror
                         </div>
-                        
+
                         <div class="mb-4 col-md-6">
                             <label for="nominee" class="form-label">{{ __('Nominee') }}</label><span class="text-danger">*</span>
                             <input class="form-control @error('nominee') is-invalid @enderror" type="text" id="nominee"
@@ -68,7 +68,7 @@
                                 </span>
                             @enderror
                         </div>
-                        
+
                         <div class="mb-4 col-md-6">
                             <label for="email" class="form-label">{{ __('Customer Email') }}</label>
                             <input class="form-control @error('email') is-invalid @enderror" type="email" id="email"
@@ -80,7 +80,7 @@
                                 </span>
                             @enderror
                         </div>
-                        
+
                         <div class="mb-4 col-md-6">
                             <label for="phone" class="form-label">{{ __('Customer Phone') }}</label>
                             <input class="form-control @error('phone') is-invalid @enderror" type="text" id="phone"
@@ -92,7 +92,7 @@
                                 </span>
                             @enderror
                         </div>
-                        
+
                         <div class="mb-4 col-md-12">
                             <label for="address" class="form-label">{{ __('Customer Address') }}</label>
                             <input class="form-control @error('address') is-invalid @enderror" type="text" id="address"
@@ -108,8 +108,8 @@
                         <!-- Plot Selection -->
                         <h6 class="mt-3">{{ __('Plot Details') }}</h6>
                         <hr>
-                        
-                        <div class="mb-4 col-md-6">
+
+                        <div class="mb-4 col-md-12">
                             <label for="plot_id" class="form-label">{{ __('Select Plot') }}</label><span class="text-danger">*</span>
                             <select name="plot_id" class="form-select select2 @error('plot_id') is-invalid @enderror"
                                 id="plot_id" required>
@@ -140,7 +140,7 @@
                                     </span>
                                 @enderror
                             </div>
-                            
+
                             <div class="mb-4 col-md-6">
                                 <label for="booked_by" class="form-label">{{ __('Booked By') }}</label>
                                 <input class="form-control @error('booked_by') is-invalid @enderror" type="text" id="booked_by"
@@ -152,7 +152,7 @@
                                     </span>
                                 @enderror
                             </div>
-                            
+
                             <div class="mb-4 col-md-6">
                                 <label for="total_cost" class="form-label">{{ __('Total Cost') }}</label><span class="text-danger">*</span>
                                 <input class="form-control @error('total_cost') is-invalid @enderror" type="number" step="0.01" id="total_cost"
@@ -164,7 +164,7 @@
                                     </span>
                                 @enderror
                             </div>
-                            
+
                             <div class="mb-4 col-md-6">
                                 <label for="discount" class="form-label">{{ __('Discount') }}</label>
                                 <input class="form-control @error('discount') is-invalid @enderror" type="number" step="0.01" id="discount"
@@ -176,7 +176,7 @@
                                     </span>
                                 @enderror
                             </div>
-                            
+
                             <div class="mb-4 col-md-6">
                                 <label for="remaining_amount" class="form-label">{{ __('Remaining Amount') }}</label>
                                 <input class="form-control @error('remaining_amount') is-invalid @enderror" type="number" step="0.01" id="remaining_amount"
@@ -188,7 +188,7 @@
                                     </span>
                                 @enderror
                             </div>
-                            
+
                             <div class="mb-4 col-md-6">
                                 <label for="booking_date" class="form-label">{{ __('Booking Date') }}</label>
                                 <input class="form-control @error('booking_date') is-invalid @enderror" type="date" id="booking_date"
@@ -201,7 +201,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mt-2">
                         <button type="submit" class="btn btn-primary me-3">{{ __('Add Customer') }}</button>
                     </div>
@@ -214,25 +214,25 @@
 @section('script')
 <script>
     $(document).ready(function() {
-        
+
         // When plot is selected, show file details and autofill total cost
         $('#plot_id').on('change', function() {
             var selectedOption = $(this).find('option:selected');
             var plotPrice = selectedOption.data('price');
-            
+
             if ($(this).val()) {
                 // Show the plot file details section
                 $('#plotFileDetails').slideDown('fast');
-                
+
                 // Autofill total cost with plot price
                 $('#total_cost').val(plotPrice);
-                
+
                 // Calculate remaining amount
                 calculateRemainingAmount();
             } else {
                 // Hide the plot file details section if no plot selected
                 $('#plotFileDetails').slideUp('fast');
-                
+
                 // Clear all plot file detail fields
                 $('#file_no').val('');
                 $('#booked_by').val('');
@@ -244,24 +244,24 @@
                 $('#status').val('booked');
             }
         });
-        
+
         // Calculate remaining amount when discount or paid amount changes
         function calculateRemainingAmount() {
             var totalCost = parseFloat($('#total_cost').val()) || 0;
             var discount = parseFloat($('#discount').val()) || 0;
             var paidAmount = parseFloat($('#paid_amount').val()) || 0;
-            
+
             var netAmount = totalCost - discount;
             var remainingAmount = netAmount - paidAmount;
-            
+
             $('#remaining_amount').val(remainingAmount.toFixed(2));
         }
-        
+
         // Listen for changes on discount and paid_amount
         $('#discount, #paid_amount').on('input', function() {
             calculateRemainingAmount();
         });
-        
+
         // If plot was previously selected (e.g., after form validation error), show details
         @if(old('plot_id'))
             $('#plot_id').trigger('change');

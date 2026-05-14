@@ -107,25 +107,77 @@
                             @enderror
                         </div>
                         <div class="mb-4 col-md-12">
-                            <div class="row" id="extra-wrapper">
-                                <div class="col-md-12">
-                                    <div class="mb-3">
-                                        <label for="extra" class="form-label">Extra <span
-                                                class="text-danger">*</span></label>
-                                        <button type="button" id="add-extra" class="btn btn-primary btn-sm float-end">
-                                            <i class="ti ti-plus me-0 me-sm-1 ti-xs"></i> Add More
-                                        </button>
-                                    </div>
-                                </div>
-                                @php $extra = old('extra', json_decode($plot->extra) ?? []); @endphp
-                                @foreach ($extra as $index => $extras)
-                                    <div class="mb-4 col-md-12 amenity-item">
-                                        <div class="input-group">
-                                            <input class="form-control" type="text" name="extra[]" value="{{ $extras }}" required>
-                                            <button type="button" class="btn btn-danger remove-btn"><i class="ti ti-trash"></i></button>
+                            @php
+                                $hasExtras = $plot->extras && $plot->extras->count() > 0;
+                                $oldHasExtras = old('has_extras', $hasExtras);
+                            @endphp
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="has_extras" name="has_extras" value="1"
+                                    {{ $oldHasExtras ? 'checked' : '' }}>
+                                <label class="form-check-label" for="has_extras">
+                                    Add Plot Extras (Corner, West Open, Park Facing, Main Road Facing, etc.)
+                                </label>
+                            </div>
+
+                            <div id="extras-section" style="{{ $oldHasExtras ? 'display: block;' : 'display: none;' }}">
+                                <div class="row" id="extra-wrapper">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="extra" class="form-label">Plot Extras</label>
+                                            <button type="button" id="add-extra" class="btn btn-primary btn-sm float-end">
+                                                <i class="ti ti-plus me-0 me-sm-1 ti-xs"></i> Add More
+                                            </button>
                                         </div>
                                     </div>
-                                @endforeach
+
+                                    @php
+                                        // Get existing extras from the relationship
+                                        $existingExtras = $plot->extras;
+                                        $oldExtraKeys = old('extra_key', []);
+                                        $oldExtraValues = old('extra_value', []);
+
+                                        // Determine which extras to display
+                                        if (count($oldExtraKeys) > 0) {
+                                            // Use old input if available (after validation error)
+                                            $displayExtras = [];
+                                            foreach ($oldExtraKeys as $index => $key) {
+                                                if (!empty($key)) {
+                                                    $displayExtras[] = [
+                                                        'key' => $key,
+                                                        'value' => $oldExtraValues[$index] ?? ''
+                                                    ];
+                                                }
+                                            }
+                                        } elseif ($existingExtras && $existingExtras->count() > 0) {
+                                            // Use existing extras from database
+                                            $displayExtras = $existingExtras->toArray();
+                                        } else {
+                                            // Default 4 extras
+                                            $displayExtras = [
+                                                ['key' => 'Corner', 'value' => ''],
+                                                ['key' => 'West Open', 'value' => ''],
+                                                ['key' => 'Park Facing', 'value' => ''],
+                                                ['key' => 'Main Road Facing', 'value' => '']
+                                            ];
+                                        }
+                                    @endphp
+
+                                    @foreach ($displayExtras as $index => $extra)
+                                        <div class="mb-4 col-md-12 amenity-item">
+                                            <div class="input-group">
+                                                <input class="form-control" type="text" name="extra_key[]"
+                                                    placeholder="Extra name (e.g., Corner)"
+                                                    value="{{ $extra['key'] ?? $extra->key ?? '' }}" />
+                                                <input class="form-control" type="text" name="extra_value[]"
+                                                    placeholder="Amount (e.g., +5,000)"
+                                                    value="{{ $extra['value'] ?? $extra->value ?? '' }}" />
+                                                <button type="button" class="btn btn-danger remove-btn">
+                                                    <i class="ti ti-trash me-0 me-sm-1 ti-xs"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                         <div class="mb-4 col-md-12">
@@ -165,34 +217,32 @@
 @section('script')
     <script>
         $(document).ready(function() {
-            // extra Functionality
+            // Toggle extras section on checkbox change
+            $('#has_extras').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#extras-section').slideDown();
+                } else {
+                    $('#extras-section').slideUp();
+                }
+            });
+
+            // Add new extra field
             $('#add-extra').on('click', function() {
                 let newField = `
                 <div class="mb-4 col-md-12 amenity-item">
-                <div class="input-group">
-                    <input class="form-control" type="text" name="extra[]" required placeholder="Enter extra" />
-                    <button type="button" class="btn btn-danger remove-btn"><i class="ti ti-trash me-0 me-sm-1 ti-xs"></i></button>
-                </div>
+                    <div class="input-group">
+                        <input class="form-control" type="text" name="extra_key[]" placeholder="Extra name (e.g., Corner)" />
+                        <input class="form-control" type="text" name="extra_value[]" placeholder="Amount (e.g., +5,000)" />
+                        <button type="button" class="btn btn-danger remove-btn"><i class="ti ti-trash me-0 me-sm-1 ti-xs"></i></button>
+                    </div>
                 </div>`;
                 $('#extra-wrapper').append(newField);
-                toggleRemoveButtons();
             });
 
+            // Remove extra field
             $(document).on('click', '.remove-btn', function() {
                 $(this).closest('.amenity-item').remove();
-                toggleRemoveButtons();
             });
-
-            function toggleRemoveButtons() {
-                let total = $('.amenity-item').length;
-                if (total > 1) {
-                    $('.remove-btn').removeClass('d-none');
-                } else {
-                    $('.remove-btn').addClass('d-none');
-                }
-            }
-
-            toggleRemoveButtons();
         });
     </script>
 @endsection
